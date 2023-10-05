@@ -26,7 +26,7 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
     print(barrels_delivered)
 
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT gold, num_red_ml, num_blue_ml, num_green_ml  FROM global_inventory"))
+        result = connection.execute(sqlalchemy.text("SELECT gold, num_red_ml, num_blue_ml, num_green_ml FROM global_inventory"))
 
     gold = result[0]
     red_ml = result[1]
@@ -62,7 +62,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     print(wholesale_catalog)
 
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT gold, num_red_potions, num_blue_potions, num_green_potions  FROM global_inventory"))
+        result = connection.execute(sqlalchemy.text("SELECT gold, num_red_potions, num_blue_potions, num_green_potions FROM global_inventory"))
 
     gold = result[0]
     red_pots = result[1]
