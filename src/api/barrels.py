@@ -1,3 +1,4 @@
+import sys
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from src.api import auth
@@ -25,14 +26,32 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
     print(barrels_delivered)
 
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT num_red_ml, gold FROM global_inventory"))
+        result = connection.execute(sqlalchemy.text("SELECT gold, num_red_ml, num_blue_ml, num_green_ml  FROM global_inventory"))
 
-    num_red_ml = result[0]
-    gold = result[1]
+    gold = result[0]
+    red_ml = result[1]
+    blue_ml = result[2]
+    green_ml = result[3]
 
-    with db.engine.begin() as connection:
-        result2 = connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_red_ml = {}, gold = {}"
-                                                     .format(barrels_delivered[0].ml_per_barrel + num_red_ml, gold - barrels_delivered[0].price)))
+    red = [100,0,0,0]
+    blue = [0,0,100,0]
+    green = [0,100,0,0]
+
+    for barrel in barrels_delivered:
+        if (barrel.potion_type == red):
+            with db.engine.begin() as connection:
+                result2 = connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_red_ml = {}, gold = {}"
+                                                     .format(barrel.ml_per_barrel + red_ml, gold - barrel.price)))
+        elif (barrel.potion_type == blue):
+            with db.engine.begin() as connection:
+                result2 = connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_blue_ml = {}, gold = {}"
+                                                     .format(barrel.ml_per_barrel + blue_ml, gold - barrel.price)))
+        elif (barrel.potion_type == green):
+            with db.engine.begin() as connection:
+                result2 = connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_green_ml = {}, gold = {}"
+                                                     .format(barrel.ml_per_barrel + green_ml, gold - barrel.price)))
+
+
 
     return "OK"
 
@@ -43,16 +62,32 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     print(wholesale_catalog)
 
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT num_red_potions, gold FROM global_inventory"))
+        result = connection.execute(sqlalchemy.text("SELECT gold, num_red_potions, num_blue_potions, num_green_potions  FROM global_inventory"))
 
-    num_red_pots = result[0]
-    gold = result[1]
+    gold = result[0]
+    red_pots = result[1]
+    blue_pots = result[2]
+    green_pots = result[3]
 
-    if(num_red_pots < 10):
-        for barrel in wholesale_catalog:
-            if(barrel.potion_type[0] == 100 & gold >= barrel.price):
-                sku = barrel.sku
-                break
+    red = [100,0,0,0]
+    blue = [0,0,100,0]
+    green = [0,100,0,0]
+
+    cheapest = sys.maxint
+
+    for barrel in wholesale_catalog:
+        if (barrel.potion_type == red & red_pots < 10 & gold >= barrel.price):
+            if(barrel.price < cheapest):
+                    cheapest = barrel.price
+                    sku = barrel.sku
+        elif (barrel.potion_type == blue & blue_pots < 10 & gold >= barrel.price):
+            if(barrel.price < cheapest):
+                    cheapest = barrel.price
+                    sku = barrel.sku
+        elif (barrel.potion_type == green & green_pots < 10 & gold >= barrel.price):
+            if(barrel.price < cheapest):
+                    cheapest = barrel.price
+                    sku = barrel.sku
 
     if(sku == None):
         return []
