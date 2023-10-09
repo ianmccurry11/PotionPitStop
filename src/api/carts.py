@@ -23,7 +23,6 @@ class info(BaseModel):
 class NewCart(BaseModel):
     customer: str
 
-payments = []
 info_dict = {}
 cart_id = -1
 
@@ -102,12 +101,16 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
     green_pots = result.num_green_potions
     gold = result.gold
 
-    global payments
-    payments.append(cart_checkout.payment)
-
+    global info_dict
     total_pots = 0
     total_cost = 0
-    global info_dict
+
+    file1 = open("Payments.txt", "a") 
+    file1.write("payment = {} from {}\n".format(cart_checkout.payment,info_dict[cart_id].customer))
+    file1.close() 
+
+    file2 = open("Ledger.txt", "a") 
+    
     for item1 in info_dict[cart_id].items:
         if(item1.sku == "RED_POTION_0" and item1.quantity <= red_pots):
             with db.engine.begin() as connection:
@@ -116,6 +119,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
                 red_pots -= item1.quantity
                 total_pots += item1.quantity
                 total_cost += item1.quantity * item1.price
+                file2.write("just sold {} red pots to {}\n".format(item1.quantity, info_dict[cart_id].customer))
         elif(item1.sku == "BLUE_POTION_0" and item1.quantity <= blue_pots):
             with db.engine.begin() as connection:
                 result = connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_blue_potions = {}"
@@ -123,6 +127,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
                 blue_pots -= item1.quantity
                 total_pots += item1.quantity
                 total_cost += item1.quantity * item1.price
+                file2.write("just sold {} blue pots to {}\n".format(item1.quantity,info_dict[cart_id].customer))
         elif(item1.sku == "GREEN_POTION_0" and item1.quantity <= green_pots):
             with db.engine.begin() as connection:
                 result = connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_green_potions = {}"
@@ -130,9 +135,12 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
                 green_pots -= item1.quantity
                 total_pots += item1.quantity
                 total_cost += item1.quantity * item1.price
+                file2.write("just sold {} green pots to {}\n".format(item1.quantity,info_dict[cart_id].customer))
 
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text("UPDATE global_inventory SET gold = {}"
                                     .format(gold + total_cost)))
+
+    file2.close() 
 
     return {"total_potions_bought": total_pots, "total_gold_paid": total_cost}
