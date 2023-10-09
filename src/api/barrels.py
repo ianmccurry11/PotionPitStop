@@ -26,12 +26,12 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
     print(barrels_delivered)
 
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT gold, num_red_ml, num_blue_ml, num_green_ml FROM global_inventory"))
+        result = connection.execute(sqlalchemy.text("SELECT gold, num_red_ml, num_blue_ml, num_green_ml FROM global_inventory")).first()
 
     gold = result[0]
-    red_ml = result[1]
-    blue_ml = result[2]
-    green_ml = result[3]
+    red_ml = result.num_red_ml
+    blue_ml = result.num_blue_ml
+    green_ml = result.num_green_ml
 
     red = [100,0,0,0]
     blue = [0,0,100,0]
@@ -59,37 +59,37 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
 @router.post("/plan")
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     """ """
-    print(wholesale_catalog)
 
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT gold, num_red_potions, num_blue_potions, num_green_potions FROM global_inventory"))
+        result = connection.execute(sqlalchemy.text("SELECT gold, num_red_potions, num_blue_potions, num_green_potions FROM global_inventory")).first()
 
-    gold = result[0]
-    red_pots = result[1]
-    blue_pots = result[2]
-    green_pots = result[3]
+    gold = result.gold
+    red_pots = result.num_red_potions
+    blue_pots = result.num_blue_potions
+    green_pots = result.num_green_potions
 
     red = [100,0,0,0]
     blue = [0,0,100,0]
     green = [0,100,0,0]
 
-    cheapest = sys.maxint
+    best = 0
+    sku = None
 
     for barrel in wholesale_catalog:
-        if (barrel.potion_type == red & red_pots < 10 & gold >= barrel.price):
-            if(barrel.price < cheapest):
-                    cheapest = barrel.price
+        if (barrel.potion_type == red and red_pots < 10 and gold >= barrel.price):
+            if(barrel.ml_per_barrel/barrel.price > best):
+                    best = barrel.ml_per_barrel/barrel.price
                     sku = barrel.sku
-        elif (barrel.potion_type == blue & blue_pots < 10 & gold >= barrel.price):
-            if(barrel.price < cheapest):
-                    cheapest = barrel.price
+        elif (barrel.potion_type == blue and blue_pots < 10 and gold >= barrel.price):
+            if(barrel.ml_per_barrel/barrel.price > best):
+                    best = barrel.ml_per_barrel/barrel.price
                     sku = barrel.sku
-        elif (barrel.potion_type == green & green_pots < 10 & gold >= barrel.price):
-            if(barrel.price < cheapest):
-                    cheapest = barrel.price
+        elif (barrel.potion_type == green and green_pots < 10 and gold >= barrel.price):
+            if(barrel.ml_per_barrel/barrel.price > best):
+                    best = barrel.ml_per_barrel/barrel.price
                     sku = barrel.sku
 
-    if(sku == None):
+    if(sku is None):
         return []
 
     return [

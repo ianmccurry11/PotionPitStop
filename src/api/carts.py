@@ -10,24 +10,44 @@ router = APIRouter(
     dependencies=[Depends(auth.get_api_key)],
 )
 
+class item(BaseModel):
+    sku: str
+    quantity: int
+    price: int
+
+
+class info(BaseModel):
+    customer: str
+    items: list[item]
 
 class NewCart(BaseModel):
     customer: str
 
+payments = []
+info_dict = {}
+cart_id = -1
 
 @router.post("/")
 def create_cart(new_cart: NewCart):
     """ """
-    id = int(NewCart.customer)
-    return {"cart_id": id}
+    global cart_id
+    cart_id += 1
+
+    temp = info(customer=new_cart.customer,items=[])
+    info_dict[cart_id] = temp
+
+    return {"cart_id": cart_id}
 
 
 @router.get("/{cart_id}")
 def get_cart(cart_id: int):
     """ """
-    cust = str(cart_id)
-    return {}
-
+    global info_dict
+    if(len(info_dict) > cart_id):
+        temp2 = info_dict[cart_id].customer
+        return {temp2}
+    else:
+        return {None}
 
 class CartItem(BaseModel):
     quantity: int
@@ -36,11 +56,37 @@ class CartItem(BaseModel):
 @router.post("/{cart_id}/items/{item_sku}")
 def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
     """ """
-    # Find cart with id
-    # use catalog to find item?
-    # use quantity from sku to increase CartItem?
+    global info_dict
+
+    with db.engine.begin() as connection:
+        result = connection.execute(sqlalchemy.text("SELECT num_red_potions, num_blue_potions, num_green_potions FROM global_inventory")).first()
+
+    red_pots = result.num_red_potions
+    blue_pots = result.num_blue_potions
+    green_pots = result.num_green_potions
+
+    if(item_sku == "RED_POTION_0"):
+        instock = red_pots
+    elif(item_sku == "BLUE_POTION_0"):
+        instock = blue_pots
+    elif(item_sku == "GREEN_POTION_0"):
+        instock = green_pots
+    else:
+        return "ITEM SKU NOT FOUND"
+
+    if(check_stock(instock=instock, requested=cart_item.quantity) == False):
+        return "NOT ENOUGH OF ITEM IN STOCK"
+
+    item1 = item(sku= item_sku,quantity=cart_item.quantity,price=50)
+    info_dict[cart_id].items.append(item1)
+
     return "OK"
 
+def check_stock(instock: int, requested: int):
+    if(instock < requested):
+        return False
+    else:
+        return True
 
 class CartCheckout(BaseModel):
     payment: str
@@ -48,7 +94,45 @@ class CartCheckout(BaseModel):
 @router.post("/{cart_id}/checkout")
 def checkout(cart_id: int, cart_checkout: CartCheckout):
     """ """
-    #find cart with id
-    # find how many potions bought for each item and update global_inventory
-    # find out how much gold i spent, and update global inventory
-    return {"total_potions_bought": 1, "total_gold_paid": 50}
+    with db.engine.begin() as connection:
+        result = connection.execute(sqlalchemy.text("SELECT num_red_potions, num_blue_potions, num_green_potions, gold FROM global_inventory")).first()
+    
+    red_pots = result.num_red_potions
+    blue_pots = result.num_blue_potions
+    green_pots = result.num_green_potions
+    gold = result.gold
+
+    global payments
+    payments.append(cart_checkout.payment)
+
+    total_pots = 0
+    total_cost = 0
+    global info_dict
+    for item1 in info_dict[cart_id].items:
+        if(item1.sku == "RED_POTION_0" and item1.quantity <= red_pots):
+            with db.engine.begin() as connection:
+                result = connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_red_potions = {}"
+                                             .format(red_pots - item1.quantity)))
+                red_pots -= item1.quantity
+                total_pots += item1.quantity
+                total_cost += item1.quantity * item1.price
+        elif(item1.sku == "BLUE_POTION_0" and item1.quantity <= blue_pots):
+            with db.engine.begin() as connection:
+                result = connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_blue_potions = {}"
+                                             .format(blue_pots - item1.quantity)))
+                blue_pots -= item1.quantity
+                total_pots += item1.quantity
+                total_cost += item1.quantity * item1.price
+        elif(item1.sku == "GREEN_POTION_0" and item1.quantity <= green_pots):
+            with db.engine.begin() as connection:
+                result = connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_green_potions = {}"
+                                             .format(green_pots - item1.quantity)))
+                green_pots -= item1.quantity
+                total_pots += item1.quantity
+                total_cost += item1.quantity * item1.price
+
+    with db.engine.begin() as connection:
+        result = connection.execute(sqlalchemy.text("UPDATE global_inventory SET gold = {}"
+                                    .format(gold + total_cost)))
+
+    return {"total_potions_bought": total_pots, "total_gold_paid": total_cost}
