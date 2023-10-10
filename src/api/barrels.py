@@ -28,7 +28,7 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text("SELECT gold, num_red_ml, num_blue_ml, num_green_ml FROM global_inventory")).first()
 
-    gold = result[0]
+    gold = result.gold
     red_ml = result.num_red_ml
     blue_ml = result.num_blue_ml
     green_ml = result.num_green_ml
