@@ -115,7 +115,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
          barrels.append(Barrel_plan(sku= r_sku,quantity= 1))
          gold -= r_gold
 
-    if(barrels is None):
+    if(len(barrels) <= 0):
         return []
     else:
         return [barrels]
