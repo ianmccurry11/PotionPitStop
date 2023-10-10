@@ -103,8 +103,6 @@ def get_bottle_plan():
 
     # Initial logic: bottle all barrels into red potions.
     if(count == 0):
-        return[]
+        return()
     
-    return [
-        potions
-        ]
+    return potions
