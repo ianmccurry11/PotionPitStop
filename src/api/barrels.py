@@ -116,6 +116,6 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
          gold -= r_gold
 
     if(len(barrels) <= 0):
-        return []
+        return()
     else:
-        return [barrels]
+        return barrels
