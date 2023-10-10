@@ -72,29 +72,55 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     blue = [0,0,100,0]
     green = [0,100,0,0]
 
-    best = 0
-    sku = None
+    r_best = 0
+    b_best = 0
+    g_best = 0
+    r_sku = None
+    b_sku = None
+    g_sku = None
+    r_gold = 0
+    b_gold = 0
+    g_gold = 0
+
+    barrels = []
 
     for barrel in wholesale_catalog:
         if (barrel.potion_type == red and red_pots < 10 and gold >= barrel.price):
-            if(barrel.ml_per_barrel/barrel.price > best):
-                    best = barrel.ml_per_barrel/barrel.price
-                    sku = barrel.sku
+            if(barrel.ml_per_barrel/barrel.price > r_best):
+                    r_best = barrel.ml_per_barrel/barrel.price
+                    r_sku = barrel.sku
+                    r_gold = barrel.price
         elif (barrel.potion_type == blue and blue_pots < 10 and gold >= barrel.price):
-            if(barrel.ml_per_barrel/barrel.price > best):
-                    best = barrel.ml_per_barrel/barrel.price
-                    sku = barrel.sku
+            if(barrel.ml_per_barrel/barrel.price > b_best):
+                    b_best = barrel.ml_per_barrel/barrel.price
+                    b_sku = barrel.sku
+                    b_gold = barrel.price
         elif (barrel.potion_type == green and green_pots < 10 and gold >= barrel.price):
-            if(barrel.ml_per_barrel/barrel.price > best):
-                    best = barrel.ml_per_barrel/barrel.price
-                    sku = barrel.sku
+            if(barrel.ml_per_barrel/barrel.price > g_best):
+                    g_best = barrel.ml_per_barrel/barrel.price
+                    g_sku = barrel.sku
+                    g_gold = barrel.price
 
-    if(sku is None):
-        return []
-
-    return [
-        {
-            "sku": sku,
+    if(g_sku is not None and g_gold <= gold):
+         barrels.append({
+            "sku": g_sku,
             "quantity": 1,
-        }
-    ]
+         })
+         gold -= g_gold
+    if(b_sku is not None and b_gold <= gold):
+         barrels.append({
+            "sku": b_sku,
+            "quantity": 1,
+         })
+         gold -= b_gold
+    if(r_sku is not None and r_gold <= gold):
+         barrels.append({
+            "sku": r_sku,
+            "quantity": 1,
+         })
+         gold -= r_gold
+
+    if(barrels is None):
+        return []
+    else:
+        return [barrels]
