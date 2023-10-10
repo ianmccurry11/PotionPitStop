@@ -55,6 +55,10 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
 
     return "OK"
 
+class Barrel_plan(BaseModel):
+    sku: str
+    quantity: int
+
 # Gets called once a day
 @router.post("/plan")
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
@@ -102,22 +106,13 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                     g_gold = barrel.price
 
     if(g_sku is not None and g_gold <= gold):
-         barrels.append({
-            "sku": g_sku,
-            "quantity": 1,
-         })
+         barrels.append(Barrel_plan(sku= g_sku,quantity= 1))
          gold -= g_gold
     if(b_sku is not None and b_gold <= gold):
-         barrels.append({
-            "sku": b_sku,
-            "quantity": 1,
-         })
+         barrels.append(Barrel_plan(sku= b_sku,quantity= 1))
          gold -= b_gold
     if(r_sku is not None and r_gold <= gold):
-         barrels.append({
-            "sku": r_sku,
-            "quantity": 1,
-         })
+         barrels.append(Barrel_plan(sku= r_sku,quantity= 1))
          gold -= r_gold
 
     if(barrels is None):
