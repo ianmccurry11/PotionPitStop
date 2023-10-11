@@ -113,6 +113,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
     
     for item1 in info_dict[cart_id].items:
         if(item1.sku == "RED_POTION_0" and item1.quantity <= red_pots):
+            print("SELLING RED POTION")
             with db.engine.begin() as connection:
                 result = connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_red_potions = {}"
                                              .format(red_pots - item1.quantity)))
@@ -121,6 +122,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
                 total_cost += item1.quantity * item1.price
                 file2.write("just sold {} red pots to {}\n".format(item1.quantity, info_dict[cart_id].customer))
         elif(item1.sku == "BLUE_POTION_0" and item1.quantity <= blue_pots):
+            print("SELLING BLUE POTION")
             with db.engine.begin() as connection:
                 result = connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_blue_potions = {}"
                                              .format(blue_pots - item1.quantity)))
@@ -129,6 +131,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
                 total_cost += item1.quantity * item1.price
                 file2.write("just sold {} blue pots to {}\n".format(item1.quantity,info_dict[cart_id].customer))
         elif(item1.sku == "GREEN_POTION_0" and item1.quantity <= green_pots):
+            print("SELLING GREEN POTION")
             with db.engine.begin() as connection:
                 result = connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_green_potions = {}"
                                              .format(green_pots - item1.quantity)))
