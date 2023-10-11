@@ -121,5 +121,5 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         print("EMPTY RETURN BARREL/PLAN")
         return()
     else:
-        print("PLANNING BARRELS\n"barrels + "\n")
+        print("PLANNING BARRELS\n" + barrels + "\n")
         return barrels
