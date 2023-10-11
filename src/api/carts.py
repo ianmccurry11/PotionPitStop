@@ -76,7 +76,7 @@ def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
     if(check_stock(instock=instock, requested=cart_item.quantity) == False):
         return "NOT ENOUGH OF ITEM IN STOCK"
 
-    item1 = item(sku= item_sku,quantity=cart_item.quantity,price=5)
+    item1 = item(sku= item_sku,quantity=cart_item.quantity,price=50)
     info_dict[cart_id].items.append(item1)
 
     return "OK"

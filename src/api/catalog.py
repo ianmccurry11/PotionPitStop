@@ -30,7 +30,7 @@ def get_catalog():
                         "sku": "RED_POTION_0",
                         "name": "red potion",
                         "quantity": red_pots,
-                        "price": 5,
+                        "price": 50,
                         "potion_type": red,
                     })
     if(blue_pots > 0):
@@ -38,7 +38,7 @@ def get_catalog():
                         "sku": "BLUE_POTION_0",
                         "name": "blue potion",
                         "quantity": blue_pots,
-                        "price": 5,
+                        "price": 50,
                         "potion_type": blue,
                     })
     if(green_pots > 0):
@@ -46,7 +46,7 @@ def get_catalog():
                         "sku": "GREEN_POTION_0",
                         "name": "green potion",
                         "quantity": green_pots,
-                        "price": 5,
+                        "price": 50,
                         "potion_type": green,
                     })
 
