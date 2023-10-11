@@ -19,9 +19,9 @@ def get_catalog():
     blue_pots = result.num_blue_potions
     green_pots = result.num_green_potions
 
-    red = [1,0,0,0]
-    blue = [0,0,1,0]
-    green = [0,1,0,0]
+    red = [100,0,0,0]
+    blue = [0,0,100,0]
+    green = [0,100,0,0]
     
     catalog = []
 
