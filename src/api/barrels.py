@@ -64,7 +64,6 @@ class Barrel_plan(BaseModel):
 @router.post("/plan")
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     """ """
-    logging.info(wholesale_catalog)
     print(wholesale_catalog)
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text("SELECT gold, num_red_potions, num_blue_potions, num_green_potions FROM global_inventory")).first()
@@ -119,8 +118,8 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
     
     if(len(barrels) <= 0):
-        logging.info("EMPTY RETURN BARREL/PLAN")
+        print("EMPTY RETURN BARREL/PLAN")
         return()
     else:
-        logging.info(barrels)
+        print(barrels)
         return barrels
