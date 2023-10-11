@@ -63,7 +63,7 @@ class Barrel_plan(BaseModel):
 @router.post("/plan")
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     """ """
-
+    print(wholesale_catalog)
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text("SELECT gold, num_red_potions, num_blue_potions, num_green_potions FROM global_inventory")).first()
 
