@@ -34,9 +34,9 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
     blue_ml = result.num_blue_ml
     green_ml = result.num_green_ml
 
-    red = [100,0,0,0]
-    blue = [0,0,100,0]
-    green = [0,100,0,0]
+    red = [1,0,0,0]
+    blue = [0,0,1,0]
+    green = [0,1,0,0]
 
     for barrel in barrels_delivered:
         if (barrel.potion_type == red):
@@ -73,9 +73,9 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     blue_pots = result.num_blue_potions
     green_pots = result.num_green_potions
 
-    red = [100,0,0,0]
-    blue = [0,0,100,0]
-    green = [0,100,0,0]
+    red = [1,0,0,0]
+    blue = [0,0,1,0]
+    green = [0,1,0,0]
 
     r_best = 0
     b_best = 0

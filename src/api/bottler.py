@@ -30,9 +30,9 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
     blue_pots = result.num_blue_potions
     green_pots = result.num_green_potions
 
-    red = [100,0,0,0]
-    blue = [0,0,100,0]
-    green = [0,100,0,0]
+    red = [1,0,0,0]
+    blue = [0,0,1,0]
+    green = [0,1,0,0]
 
     for potion in potions_delivered:
         if(potion.potion_type == red):
@@ -74,9 +74,9 @@ def get_bottle_plan():
     blue_ml = result.num_blue_ml
     green_ml = result.num_green_ml
 
-    red = [100,0,0,0]
-    blue = [0,0,100,0]
-    green = [0,100,0,0]
+    red = [1,0,0,0]
+    blue = [0,0,1,0]
+    green = [0,1,0,0]
 
     potions = []
 
