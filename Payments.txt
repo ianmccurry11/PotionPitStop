@@ -1,3 +1,5 @@
 payment = check from ian
 payment = card from ian
 payment = gold from ian
+payment = gold from ian
+payment = gold from ian
