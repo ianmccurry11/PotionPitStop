@@ -26,33 +26,46 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
     """ """
     print(barrels_delivered)
 
+    gold_paid = 0
+    red_ml = 0
+    blue_ml = 0
+    green_ml = 0
+    dark_ml = 0
+
+    red   = [1, 0, 0, 0]
+    green = [0, 1, 0, 0]
+    blue  = [0, 0, 1, 0]
+    dark  = [0, 0, 0, 1]
+
+    for barrel_delivered in barrels_delivered:
+        gold_paid += barrel_delivered.price * barrel_delivered.quantity
+        print(barrel_delivered)
+        if barrel_delivered.potion_type == [1,0,0,0]:
+            red_ml += barrel_delivered.ml_per_barrel * barrel_delivered.quantity
+        elif barrel_delivered.potion_type == [0,1,0,0]:
+            green_ml += barrel_delivered.ml_per_barrel * barrel_delivered.quantity
+        elif barrel_delivered.potion_type == [0,0,1,0]:
+            blue_ml += barrel_delivered.ml_per_barrel * barrel_delivered.quantity
+        elif barrel_delivered.potion_type == [0,0,0,1]:
+            dark_ml += barrel_delivered.ml_per_barrel * barrel_delivered.quantity
+        else:
+             raise Exception("Invalid potion type with potion type" + str(barrel_delivered.potion_type))
+        
+    print(f"gold_paid: {gold_paid} red_ml:{red_ml} blue_ml: {blue_ml} green_ml: {green_ml} dark_ml: {dark_ml}")
+
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT gold, num_red_ml, num_blue_ml, num_green_ml FROM global_inventory")).first()
-
-    gold = result.gold
-    red_ml = result.num_red_ml
-    blue_ml = result.num_blue_ml
-    green_ml = result.num_green_ml
-
-    red = [1,0,0,0]
-    blue = [0,0,1,0]
-    green = [0,1,0,0]
-
-    for barrel in barrels_delivered:
-        if (barrel.potion_type == red):
-            with db.engine.begin() as connection:
-                result2 = connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_red_ml = {}, gold = {}"
-                                                     .format(barrel.ml_per_barrel + red_ml, gold - barrel.price)))
-        elif (barrel.potion_type == blue):
-            with db.engine.begin() as connection:
-                result2 = connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_blue_ml = {}, gold = {}"
-                                                     .format(barrel.ml_per_barrel + blue_ml, gold - barrel.price)))
-        elif (barrel.potion_type == green):
-            with db.engine.begin() as connection:
-                result2 = connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_green_ml = {}, gold = {}"
-                                                     .format(barrel.ml_per_barrel + green_ml, gold - barrel.price)))
-
-
+        connection.execute(
+            sqlalchemy.text(
+                """
+                UPDATE globals 
+                SET
+                red_ml = red_ml + :red_ml,
+                green_ml = green_ml + :green_ml,
+                blue_ml = blue_ml + :blue_ml,
+                dark_ml = dark_ml + :dark_ml,
+                gold = gold - :gold_paid;
+                """),
+            [{"red_ml": red_ml, "green_ml": green_ml, "blue_ml": blue_ml, "dark_ml": dark_ml, "gold_paid": gold_paid}])
 
     return "OK"
 
@@ -66,62 +79,57 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     """ """
     print(wholesale_catalog)
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT gold, num_red_potions, num_blue_potions, num_green_potions FROM global_inventory")).first()
+        result = connection.execute(sqlalchemy.text("SELECT gold, red_ml, green_ml, blue_ml, dark_ml FROM globals")).first()
 
     gold = result.gold
-    red_pots = result.num_red_potions
-    blue_pots = result.num_blue_potions
-    green_pots = result.num_green_potions
 
-    red = [1,0,0,0]
-    blue = [0,0,1,0]
-    green = [0,1,0,0]
-
-    r_best = 0
-    b_best = 0
-    g_best = 0
-    r_sku = None
-    b_sku = None
-    g_sku = None
-    r_gold = 0
-    b_gold = 0
-    g_gold = 0
+    r_best, r_gold, r_sku, red   = 0, 0, None, [1,0,0,0]
+    g_best, g_gold, g_sku, green = 0, 0, None, [0,1,0,0]
+    b_best, b_gold, b_sku, blue  = 0, 0, None, [0,0,1,0]
+    d_best, d_gold, d_sku, dark  = 0, 0, None, [0,0,0,1]
 
     barrels = []
 
     for barrel in wholesale_catalog:
-        if (barrel.potion_type == red and red_pots < 10 and gold >= barrel.price):
-            if(barrel.ml_per_barrel/barrel.price > r_best):
-                    r_best = barrel.ml_per_barrel/barrel.price
-                    r_sku = barrel.sku
-                    r_gold = barrel.price
-        elif (barrel.potion_type == blue and blue_pots < 10 and gold >= barrel.price):
+        if (barrel.potion_type == dark and gold >= barrel.price):
+            if(barrel.ml_per_barrel/barrel.price > d_best):
+                    d_best = barrel.ml_per_barrel/barrel.price
+                    d_sku = barrel.sku
+                    d_gold = barrel.price
+        elif (barrel.potion_type == blue and gold >= barrel.price):
             if(barrel.ml_per_barrel/barrel.price > b_best):
                     b_best = barrel.ml_per_barrel/barrel.price
                     b_sku = barrel.sku
                     b_gold = barrel.price
-        elif (barrel.potion_type == green and green_pots < 10 and gold >= barrel.price):
+        elif (barrel.potion_type == green and gold >= barrel.price):
             if(barrel.ml_per_barrel/barrel.price > g_best):
                     g_best = barrel.ml_per_barrel/barrel.price
                     g_sku = barrel.sku
                     g_gold = barrel.price
+        elif (barrel.potion_type == red and gold >= barrel.price):
+            if(barrel.ml_per_barrel/barrel.price > r_best):
+                    r_best = barrel.ml_per_barrel/barrel.price
+                    r_sku = barrel.sku
+                    r_gold = barrel.price
 
-    if(g_sku is not None and g_gold <= gold):
-         barrels.append(Barrel_plan(sku= g_sku,quantity= 1))
-         gold -= g_gold
-    if(b_sku is not None and b_gold <= gold):
-         barrels.append(Barrel_plan(sku= b_sku,quantity= 1))
-         gold -= b_gold
+    if(d_sku is not None and d_gold <= gold):
+        barrels.append(Barrel_plan(sku= d_sku,quantity= 1))
+        gold -= r_gold
+    if(b_sku is not None and g_gold <= gold):
+        barrels.append(Barrel_plan(sku= g_sku,quantity= 1))
+        gold -= g_gold
+    if(g_sku is not None and b_gold <= gold):
+        barrels.append(Barrel_plan(sku= b_sku,quantity= 1))
+        gold -= b_gold
     if(r_sku is not None and r_gold <= gold):
-         barrels.append(Barrel_plan(sku= r_sku,quantity= 1))
-         gold -= r_gold
+        barrels.append(Barrel_plan(sku= r_sku,quantity= 1))
+        gold -= r_gold
 
     
     if(len(barrels) <= 0):
-        print("EMPTY RETURN BARREL/PLAN")
+        print("RETURNED EMPTY BARREL PLAN")
         return()
     else:
         print("PLANNING BARRELS\n")
         print(barrels)
-        print("\n")
         return barrels

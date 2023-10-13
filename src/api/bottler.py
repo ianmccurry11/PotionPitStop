@@ -18,44 +18,37 @@ class PotionInventory(BaseModel):
 @router.post("/deliver")
 def post_deliver_bottles(potions_delivered: list[PotionInventory]):
     """ """
-    print(potions_delivered)
-    with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT num_red_ml, num_blue_ml, num_green_ml, num_red_potions, num_blue_potions, num_green_potions FROM global_inventory")).first()
     
-    red_ml = result.num_red_ml
-    blue_ml = result.num_blue_ml
-    green_ml = result.num_green_ml
+    with db.engine.begin() as connection:
+        print(potions_delivered)
 
-    red_pots = result.num_red_potions
-    blue_pots = result.num_blue_potions
-    green_pots = result.num_green_potions
+        red_ml = sum(potion.quantity * potion.potion_type[0] for potion in potions_delivered)
+        green_ml = sum(potion.quantity * potion.potion_type[1] for potion in potions_delivered)
+        blue_ml = sum(potion.quantity * potion.potion_type[2] for potion in potions_delivered)
+        dark_ml = sum(potion.quantity * potion.potion_type[3] for potion in potions_delivered)
 
-    red = [100,0,0,0]
-    blue = [0,0,100,0]
-    green = [0,100,0,0]
+        for potions_delivered in potions_delivered:
+            connection.execute(
+                sqlalchemy.text(
+                    """
+                    UPDATE potions
+                    SET inventory = inventory + :quantity
+                    WHERE potion_type = :potion_type;
+                    UPDATE globals
+                    SET potion_inventory = potion_inventory + :quantity
+                    """),
+                [{"quantity": potions_delivered.quantity, "potion_type": potions_delivered.potion_type}])
 
-    for potion in potions_delivered:
-        if(potion.potion_type == red):
-            quant = potion.quantity
-            if(red_ml >= quant*100):
-                with db.engine.begin() as connection:
-                    result2 = connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_red_ml = {}, num_red_potions = {}"
-                                                .format(red_ml - quant * 100, red_pots + quant)))
-                red_ml -= quant*100
-        if(potion.potion_type == blue):
-            quant = potion.quantity
-            if(blue_ml >= quant*100):
-                with db.engine.begin() as connection:
-                    result2 = connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_blue_ml = {}, num_blue_potions = {}"
-                                                .format(blue_ml - quant * 100, blue_pots + quant)))
-                blue_ml -= quant*100
-        if(potion.potion_type == green):
-            quant = potion.quantity
-            if(green_ml >= quant):
-                with db.engine.begin() as connection:
-                    result2 = connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_green_ml = {}, num_green_potions = {}"
-                                                .format(green_ml - quant * 100, green_pots + quant)))
-                green_ml -= quant*100
+        connection.execute(
+            sqlalchemy.text(
+                    """
+                    UPDATE globals SET 
+                    red_ml = red_ml - :red_ml,
+                    green_ml = green_ml - :green_ml,
+                    blue_ml = blue_ml - :blue_ml,
+                    dark_ml = dark_ml - :dark_ml
+                    """),
+            [{"red_ml": red_ml, "green_ml": green_ml, "blue_ml": blue_ml, "dark_ml": dark_ml}])
 
     return "OK"
 
@@ -66,44 +59,33 @@ def get_bottle_plan():
     Go from barrel to bottle.
     """
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT num_red_ml, num_blue_ml, num_green_ml FROM global_inventory")).first()
+        result = connection.execute(sqlalchemy.text("SELECT red_ml, blue_ml, green_ml, dark_ml FROM globals")).first()
+        possible_potions = connection.execute(
+                                sqlalchemy.text(
+                                    """
+                                    SELECT * 
+                                    FROM potions 
+                                    ORDER by 
+                                    potion_id DESC
+                                    """)).all()
 
-    count = 0
+    potions  = []
+    red_ml   = result.red_ml
+    green_ml = result.green_ml
+    blue_ml  = result.blue_ml
+    dark_ml  = result.dark_ml
 
-    red_ml = result.num_red_ml
-    blue_ml = result.num_blue_ml
-    green_ml = result.num_green_ml
+    for potion in possible_potions:
+        if potion.inventory < 4 and potion.potion_type[0] <= red_ml and potion.potion_type[1] <= green_ml and potion.potion_type[2] <= blue_ml and potion.potion_type[3] <= dark_ml:
+            potions.append(PotionInventory(potion_type= potion.potion_type, quantity= 1))
+            red_ml   -= potion.potion_type[0]
+            green_ml -= potion.potion_type[1]
+            blue_ml  -= potion.potion_type[2]
+            dark_ml  -= potion.potion_type[3]
 
-    red = [100,0,0,0]
-    blue = [0,0,100,0]
-    green = [0,100,0,0]
-
-    potions = []
-
-    red_quan = (int)(red_ml/100)
-    blue_quan = (int)(blue_ml/100)
-    green_quan = (int)(green_ml/100)
-
-    if (red_quan > 0):
-        count+=1
-        temp = PotionInventory(potion_type=red,quantity=red_quan)
-        potions.append(temp)
-    if (blue_quan > 0):
-        count+=1
-        temp = PotionInventory(potion_type=blue,quantity=blue_quan)
-        potions.append(temp)
-    if (green_quan > 0):
-        count+=1
-        temp = PotionInventory(potion_type=green,quantity=green_quan)
-        potions.append(temp)
-        
-    # Each bottle has a quantity of what proportion of red, blue, and
-    # green potion to add.
-    # Expressed in integers from 1 to 100 that must sum up to 100.
-
-    # Initial logic: bottle all barrels into red potions.
-    if(count == 0):
+    if len(potions) <= 0:
         print("NO POTIONS PLANNED")
         return()
-    print(potions)
-    return potions
+    else:
+        print(potions)
+        return potions
