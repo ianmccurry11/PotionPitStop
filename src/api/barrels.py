@@ -82,6 +82,10 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         result = connection.execute(sqlalchemy.text("SELECT gold, red_ml, green_ml, blue_ml, dark_ml FROM globals")).first()
 
     gold = result.gold
+    red_ml = result.red_ml
+    green_ml = result.green_ml
+    blue_ml = result.blue_ml
+    dark_ml = result.dark_ml
 
     r_best, r_gold, r_sku, red   = 0, 0, None, [1,0,0,0]
     g_best, g_gold, g_sku, green = 0, 0, None, [0,1,0,0]
@@ -91,22 +95,22 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     barrels = []
 
     for barrel in wholesale_catalog:
-        if (barrel.potion_type == dark and gold >= barrel.price):
+        if (barrel.potion_type == dark and gold >= barrel.price and dark_ml < 200):
             if(barrel.ml_per_barrel/barrel.price > d_best):
                     d_best = barrel.ml_per_barrel/barrel.price
                     d_sku = barrel.sku
                     d_gold = barrel.price
-        elif (barrel.potion_type == blue and gold >= barrel.price):
+        elif (barrel.potion_type == blue and gold >= barrel.price and blue_ml < 200):
             if(barrel.ml_per_barrel/barrel.price > b_best):
                     b_best = barrel.ml_per_barrel/barrel.price
                     b_sku = barrel.sku
                     b_gold = barrel.price
-        elif (barrel.potion_type == green and gold >= barrel.price):
+        elif (barrel.potion_type == green and gold >= barrel.price and green_ml < 200):
             if(barrel.ml_per_barrel/barrel.price > g_best):
                     g_best = barrel.ml_per_barrel/barrel.price
                     g_sku = barrel.sku
                     g_gold = barrel.price
-        elif (barrel.potion_type == red and gold >= barrel.price):
+        elif (barrel.potion_type == red and gold >= barrel.price and red_ml < 200):
             if(barrel.ml_per_barrel/barrel.price > r_best):
                     r_best = barrel.ml_per_barrel/barrel.price
                     r_sku = barrel.sku
