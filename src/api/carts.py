@@ -97,11 +97,11 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
                         cart_id = :cart_id;
                         DELETE FROM cart_items
                         WHERE
-                        cart_id = :cart_id
+                        cart_id = :cart_id;
                         UPDATE globals
-                        SET gold = gold + :total_gold, potion_inventory = potion_inventory - total_potions
+                        SET gold = gold + :total_gold, potion_inventory = potion_inventory - :total_potions
                         """),
-                        [{"cart_id": cart_id, "total_gold": total_gold, "total_potions": total_potions}])
+                        [{"cart_id": cart_id, "total_gold": int(total_gold), "total_potions": total_potions}])
             
 
-    return {"total_potions_bought": total_potions, "total_gold_paid": total_gold}
+    return {"total_potions_bought": total_potions, "total_gold_paid": int(total_gold)}
