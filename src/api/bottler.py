@@ -69,6 +69,7 @@ def get_bottle_plan():
                                     potion_id DESC
                                     """)).all()
 
+    staged = 0
     potions  = []
     red_ml   = result.red_ml
     green_ml = result.green_ml
@@ -76,12 +77,15 @@ def get_bottle_plan():
     dark_ml  = result.dark_ml
 
     for potion in possible_potions:
-        if potion.inventory < 4 and potion.potion_type[0] <= red_ml and potion.potion_type[1] <= green_ml and potion.potion_type[2] <= blue_ml and potion.potion_type[3] <= dark_ml:
-            potions.append(PotionInventory(potion_type= potion.potion_type, quantity= 1))
+        while potion.inventory + staged < 4 and potion.potion_type[0] <= red_ml and potion.potion_type[1] <= green_ml and potion.potion_type[2] <= blue_ml and potion.potion_type[3] <= dark_ml:
+            staged   += 1
             red_ml   -= potion.potion_type[0]
             green_ml -= potion.potion_type[1]
             blue_ml  -= potion.potion_type[2]
             dark_ml  -= potion.potion_type[3]
+        if staged > 0:
+            potions.append(PotionInventory(potion_type= potion.potion_type, quantity= staged))
+        staged = 0
 
     if len(potions) <= 0:
         print("NO POTIONS PLANNED")
