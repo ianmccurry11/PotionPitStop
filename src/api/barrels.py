@@ -123,11 +123,11 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         barrels.append(Barrel_plan(sku= r_sku,quantity= 1))
         gold -= r_gold
     if(b_sku is not None and g_gold <= gold):
-        barrels.append(Barrel_plan(sku= g_sku,quantity= 1))
-        gold -= g_gold
-    if(g_sku is not None and b_gold <= gold):
         barrels.append(Barrel_plan(sku= b_sku,quantity= 1))
         gold -= b_gold
+    if(g_sku is not None and b_gold <= gold):
+        barrels.append(Barrel_plan(sku= g_sku,quantity= 1))
+        gold -= g_gold
 
 
     
