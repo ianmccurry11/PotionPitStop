@@ -92,12 +92,6 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
                         SET inventory = inventory - cart_items.quantity 
                         FROM cart_items
                         WHERE potions.potion_id = cart_items.potion_id and cart_items.cart_id = :cart_id;
-                        DELETE FROM carts
-                        WHERE
-                        cart_id = :cart_id;
-                        DELETE FROM cart_items
-                        WHERE
-                        cart_id = :cart_id;
                         UPDATE globals
                         SET gold = gold + :total_gold, potion_inventory = potion_inventory - :total_potions
                         """),
