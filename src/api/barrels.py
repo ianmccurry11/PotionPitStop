@@ -95,22 +95,22 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     barrels = []
 
     for barrel in wholesale_catalog:
-        if (barrel.potion_type == dark and gold >= barrel.price and dark_ml < 200):
+        if (barrel.potion_type == dark and gold >= barrel.price and dark_ml < 2000):
             if(barrel.ml_per_barrel/barrel.price > d_best):
                     d_best = barrel.ml_per_barrel/barrel.price
                     d_sku = barrel.sku
                     d_gold = barrel.price
-        elif (barrel.potion_type == blue and gold >= barrel.price and blue_ml < 200):
+        elif (barrel.potion_type == blue and gold >= barrel.price and blue_ml < 2000):
             if(barrel.ml_per_barrel/barrel.price > b_best):
                     b_best = barrel.ml_per_barrel/barrel.price
                     b_sku = barrel.sku
                     b_gold = barrel.price
-        elif (barrel.potion_type == green and gold >= barrel.price and green_ml < 200):
+        elif (barrel.potion_type == green and gold >= barrel.price and green_ml < 2000):
             if(barrel.ml_per_barrel/barrel.price > g_best):
                     g_best = barrel.ml_per_barrel/barrel.price
                     g_sku = barrel.sku
                     g_gold = barrel.price
-        elif (barrel.potion_type == red and gold >= barrel.price and red_ml < 200):
+        elif (barrel.potion_type == red and gold >= barrel.price and red_ml < 2000):
             if(barrel.ml_per_barrel/barrel.price > r_best):
                     r_best = barrel.ml_per_barrel/barrel.price
                     r_sku = barrel.sku
