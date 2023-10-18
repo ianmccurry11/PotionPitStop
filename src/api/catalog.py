@@ -18,8 +18,10 @@ def get_catalog():
 
     
     catalog = []
+    count = 0
 
     for potion in Potion_Inventory:
+        count += 1
         if potion.inventory > 0 and len(catalog) < 20:
             catalog.append({
                         "sku": potion.sku,
@@ -28,6 +30,8 @@ def get_catalog():
                         "price": potion.price,
                         "potion_type": potion.potion_type,
                         })
+        if count >= 6:
+            break
 
     if len(catalog) <= 0:
         print("NO INVENTORY FOR CATALOG")

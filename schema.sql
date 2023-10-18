@@ -22,18 +22,18 @@ create table
   ) tablespace pg_default;
 
 insert into
-  potions (name, potion_type)
+  potions (name, potion_type, sku, price)
 values
-  ('red', array[100, 0, 0, 0], 'RED_POTION'),
-  ('green', array[0, 100, 0, 0], 'GREEN_POTION'),
-  ('blue', array[0, 0, 100, 0], 'BLUE_POTION'),
-  ('dark', array[0, 0, 0, 100], 'DARK_POTION'),
-  ('purple', array[50, 0, 50, 0], 'PURPLE_POTION'),
-  ('yellow', array[50, 50, 0, 0], 'YELLOW_POTION'),
-  ('teal', array[0, 50, 50, 0], 'TEAL_POTIONS'),
-  ('dark_red', array[50, 0, 0, 50], 'DARK_RED_POTION'),
-  ('dark_green', array[0, 50, 0, 50], 'DARK_GREEN_POTION'),
-  ('dark_blue', array[0, 0, 50, 50], 'DARK_BLUE_POTION')
+  ('red', array[100, 0, 0, 0], 'RED_POTION', 50),
+  ('green', array[0, 100, 0, 0], 'GREEN_POTION', 50),
+  ('blue', array[0, 0, 100, 0], 'BLUE_POTION', 50),
+  ('dark', array[0, 0, 0, 100], 'DARK_POTION', 50),
+  ('purple', array[50, 0, 50, 0], 'PURPLE_POTION', 50),
+  ('yellow', array[50, 50, 0, 0], 'YELLOW_POTION', 50),
+  ('teal', array[0, 50, 50, 0], 'TEAL_POTIONS', 50),
+  ('dark_red', array[50, 0, 0, 50], 'DARK_RED_POTION', 50),
+  ('dark_green', array[0, 50, 0, 50], 'DARK_GREEN_POTION', 50),
+  ('dark_blue', array[0, 0, 50, 50], 'DARK_BLUE_POTION', 50)
 
 create table
   public.carts (
