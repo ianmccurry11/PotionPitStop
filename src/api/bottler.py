@@ -20,35 +20,50 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
     """ """
     
     with db.engine.begin() as connection:
+        print('POTIONS BEING DELIVERED\n')
         print(potions_delivered)
 
         red_ml = sum(potion.quantity * potion.potion_type[0] for potion in potions_delivered)
         green_ml = sum(potion.quantity * potion.potion_type[1] for potion in potions_delivered)
         blue_ml = sum(potion.quantity * potion.potion_type[2] for potion in potions_delivered)
         dark_ml = sum(potion.quantity * potion.potion_type[3] for potion in potions_delivered)
-
+        trans_id = connection.execute(
+                sqlalchemy.text("""
+                                INSERT into transactions
+                                (description)
+                                VALUES 
+                                ('MAKING POTIONS')
+                                RETURNING 
+                                id;
+                                """)).scalar_one()
         for potions_delivered in potions_delivered:
+
+            potion_id = connection.execute(
+                            sqlalchemy.text("""
+                                            SELECT 
+                                            potion_id
+                                            FROM potions
+                                            WHERE potion_type = :type
+                                            """),[{"type": potions_delivered.potion_type}]).scalar_one()
             connection.execute(
                 sqlalchemy.text(
                     """
-                    UPDATE potions
-                    SET inventory = inventory + :quantity
-                    WHERE potion_type = :potion_type;
-                    UPDATE globals
-                    SET potion_inventory = potion_inventory + :quantity
+                    INSERT into potion_ledger
+                    (transaction_id, potion_id, change)
+                    VALUES
+                    (:trans_id, :potion_id, :quantity)
                     """),
-                [{"quantity": potions_delivered.quantity, "potion_type": potions_delivered.potion_type}])
+                [{"quantity": potions_delivered.quantity, "potion_id": potion_id, "trans_id": trans_id}])
 
         connection.execute(
             sqlalchemy.text(
                     """
-                    UPDATE globals SET 
-                    red_ml = red_ml - :red_ml,
-                    green_ml = green_ml - :green_ml,
-                    blue_ml = blue_ml - :blue_ml,
-                    dark_ml = dark_ml - :dark_ml
+                    INSERT INTO
+                    global_ledger (gold, red_ml, green_ml, blue_ml, dark_ml, transaction_id)
+                    VALUES
+                    (0, :red, :green, :blue, :dark, :trans_id);
                     """),
-            [{"red_ml": red_ml, "green_ml": green_ml, "blue_ml": blue_ml, "dark_ml": dark_ml}])
+            [{"red": -red_ml, "green": -green_ml, "blue": -blue_ml, "dark": -dark_ml, "trans_id": trans_id}])
 
     return "OK"
 
@@ -59,30 +74,28 @@ def get_bottle_plan():
     Go from barrel to bottle.
     """
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT red_ml, blue_ml, green_ml, dark_ml FROM globals")).first()
+        result = connection.execute(
+                        sqlalchemy.text("SELECT SUM(gold) AS gold, SUM(red_ml) AS red, SUM(green_ml) AS green, SUM(blue_ml) AS blue, SUM(dark_ml) AS dark FROM global_ledger")).first()
         possible_potions = connection.execute(
-                                sqlalchemy.text(
-                                    """
-                                    SELECT * 
-                                    FROM potions 
-                                    ORDER by 
-                                    potion_id DESC
-                                    """)).all()
-
+                                sqlalchemy.text("SELECT * FROM potions  ORDER by potion_id DESC")).all()
+        total_potions = connection.execute(
+                            sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM potion_ledger")).scalar_one()
+    total_pots = total_potions
     staged = 0
     potions  = []
-    red_ml   = result.red_ml
-    green_ml = result.green_ml
-    blue_ml  = result.blue_ml
-    dark_ml  = result.dark_ml
+    red_ml   = result.red
+    green_ml = result.green
+    blue_ml  = result.blue
+    dark_ml  = result.dark
 
     for potion in possible_potions:
-        while potion.inventory + staged < 50 and potion.potion_type[0] <= red_ml and potion.potion_type[1] <= green_ml and potion.potion_type[2] <= blue_ml and potion.potion_type[3] <= dark_ml:
+        while total_pots < 300 and staged < 25 and potion.potion_type[0] <= red_ml and potion.potion_type[1] <= green_ml and potion.potion_type[2] <= blue_ml and potion.potion_type[3] <= dark_ml:
             staged   += 1
             red_ml   -= potion.potion_type[0]
             green_ml -= potion.potion_type[1]
             blue_ml  -= potion.potion_type[2]
             dark_ml  -= potion.potion_type[3]
+            total_potions += 1
         if staged > 0:
             potions.append(PotionInventory(potion_type= potion.potion_type, quantity= staged))
         staged = 0

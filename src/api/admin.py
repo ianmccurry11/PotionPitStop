@@ -18,12 +18,22 @@ def reset():
     """
     with db.engine.begin() as connection:
                 result = connection.execute(sqlalchemy.text("""
-                                                            UPDATE globals 
-                                                            SET
-                                                            red_ml = 0, blue_ml = 0, green_ml = 0, dark_ml = 0, gold = 100, potion_inventory = 0;
-                                                            UPDATE potions
-                                                            SET
-                                                            inventory = 0;
+                                                            TRUNCATE global_ledger;
+                                                            TRUNCATE transactions;
+                                                            INSERT into transactions
+                                                            (description)
+                                                            VALUES
+                                                            ('Admin reset');
+                                                            INSERT INTO
+                                                            global_ledger (gold, red_ml, green_ml, blue_ml, dark_ml, transaction_id)
+                                                            VALUES
+                                                            (100, 0, 0, 0, 0,
+                                                            (
+                                                            SELECT id
+                                                            FROM transactions
+                                                            limit 1
+                                                            ));
+                                                            TRUNCATE potion_ledger;
                                                             TRUNCATE carts;
                                                             TRUNCATE cart_items;
                                                             """))

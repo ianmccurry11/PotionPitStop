@@ -17,21 +17,22 @@ def get_catalog():
     
 
     
-    catalog = []
-    count = 0
+        catalog = []
+        count = 0
 
-    for potion in Potion_Inventory:
-        count += 1
-        if potion.inventory > 0 and len(catalog) < 20:
-            catalog.append({
-                        "sku": potion.sku,
-                        "name": potion.name,
-                        "quantity": potion.inventory,
-                        "price": potion.price,
-                        "potion_type": potion.potion_type,
-                        })
-        if count >= 6:
-            break
+        for potion in Potion_Inventory:
+            pot_inventory = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM potion_ledger WHERE potion_id = :potion_id"),[{"potion_id": potion.potion_id}]).scalar_one()
+            if int(pot_inventory) > 0 and len(catalog) < 20:
+                count += 1
+                catalog.append({
+                            "sku": potion.sku,
+                            "name": potion.name,
+                            "quantity": int(pot_inventory),
+                            "price": potion.price,
+                            "potion_type": potion.potion_type,
+                            })
+            if count >= 6:
+                break
 
     if len(catalog) <= 0:
         print("NO INVENTORY FOR CATALOG")

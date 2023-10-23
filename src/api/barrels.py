@@ -54,18 +54,24 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
     print(f"gold_paid: {gold_paid} red_ml:{red_ml} blue_ml: {blue_ml} green_ml: {green_ml} dark_ml: {dark_ml}")
 
     with db.engine.begin() as connection:
+        trans_id = connection.execute(
+                        sqlalchemy.text("""
+                                        INSERT into transactions
+                                        (description)
+                                        VALUES 
+                                        ('RECIEVED BARREL DELIVERY')
+                                        RETURNING 
+                                        id;
+                                        """)).scalar_one()
         connection.execute(
             sqlalchemy.text(
                 """
-                UPDATE globals 
-                SET
-                red_ml = red_ml + :red_ml,
-                green_ml = green_ml + :green_ml,
-                blue_ml = blue_ml + :blue_ml,
-                dark_ml = dark_ml + :dark_ml,
-                gold = gold - :gold_paid;
+                INSERT INTO
+                global_ledger (gold, red_ml, green_ml, blue_ml, dark_ml, transaction_id)
+                VALUES
+                (:gold, :red, :green, :blue, :dark, :trans_id);
                 """),
-            [{"red_ml": red_ml, "green_ml": green_ml, "blue_ml": blue_ml, "dark_ml": dark_ml, "gold_paid": gold_paid}])
+            [{"red": red_ml, "green": green_ml, "blue": blue_ml, "dark": dark_ml, "gold": -gold_paid, "trans_id": trans_id}])
 
     return "OK"
 
@@ -79,13 +85,13 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     """ """
     print(wholesale_catalog)
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT gold, red_ml, green_ml, blue_ml, dark_ml FROM globals")).first()
+        result = connection.execute(sqlalchemy.text("SELECT SUM(gold) AS gold, SUM(red_ml) AS red, SUM(green_ml) AS green, SUM(blue_ml) AS blue, SUM(dark_ml) AS dark FROM global_ledger")).first()
 
     gold = result.gold
-    red_ml = result.red_ml
-    green_ml = result.green_ml
-    blue_ml = result.blue_ml
-    dark_ml = result.dark_ml
+    red_ml = result.red
+    green_ml = result.green
+    blue_ml = result.blue
+    dark_ml = result.dark
 
     r_best, r_gold, r_sku, red   = 0, 0, None, [1,0,0,0]
     g_best, g_gold, g_sku, green = 0, 0, None, [0,1,0,0]
