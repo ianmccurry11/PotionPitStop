@@ -90,7 +90,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
                                                 INSERT into transactions
                                                 (description) 
                                                 VALUES 
-                                                ('SOLD :quantity POTIONS FOR :price GOLD, TO CART NUMBER :cart_id')
+                                                (CONCAT('SOLD :quantity POTIONS FOR :price GOLD, TO ', :name , ' - :cart_id'))
                                                 RETURNING
                                                 id;
                                                 """),
