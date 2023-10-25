@@ -5,6 +5,7 @@ from src.api import audit, carts, catalog, bottler, barrels, admin
 import json
 import logging
 import sys
+from starlette.middleware.cors import CORSMiddleware
 import sqlalchemy
 from src import database as db
 
@@ -21,6 +22,16 @@ app = FastAPI(
         "name": "Lucas Pierce",
         "email": "lupierce@calpoly.edu",
     },
+)
+
+origins = ["https://potion-exchange.vercel.app"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "OPTIONS"],
+    allow_headers=["*"],
 )
 
 app.include_router(audit.router)
