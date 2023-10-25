@@ -28,14 +28,14 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
         blue_ml = sum(potion.quantity * potion.potion_type[2] for potion in potions_delivered)
         dark_ml = sum(potion.quantity * potion.potion_type[3] for potion in potions_delivered)
         trans_id = connection.execute(
-                sqlalchemy.text("""
-                                INSERT into transactions
-                                (description)
-                                VALUES 
-                                ('MAKING POTIONS')
-                                RETURNING 
-                                id;
-                                """)).scalar_one()
+                    sqlalchemy.text("""
+                                    INSERT into transactions
+                                    (description)
+                                    VALUES 
+                                    ('MAKING POTIONS')
+                                    RETURNING 
+                                    id;
+                                    """)).scalar_one()
         for potions_delivered in potions_delivered:
 
             potion_id = connection.execute(
@@ -95,7 +95,7 @@ def get_bottle_plan():
             green_ml -= potion.potion_type[1]
             blue_ml  -= potion.potion_type[2]
             dark_ml  -= potion.potion_type[3]
-            total_potions += 1
+            total_pots += 1
         if staged > 0:
             potions.append(PotionInventory(potion_type= potion.potion_type, quantity= staged))
         staged = 0
