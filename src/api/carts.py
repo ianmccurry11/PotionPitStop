@@ -29,6 +29,8 @@ def search_orders(
     sort_col: search_sort_options = search_sort_options.timestamp,
     sort_order: search_sort_order = search_sort_order.desc,
 ):
+    customer_name.lower()
+    potion_sku.upper()
     """
     Search for cart line items by customer name and/or potion sku.
 
@@ -54,12 +56,15 @@ def search_orders(
     time is 5 total line items.
     """
 
+
+
+
     return {
         "previous": "",
         "next": "",
         "results": [
             {
-                "line_item_id": 1,
+                "line_item_id": 4,
                 "item_sku": "1 oblivion potion",
                 "customer_name": "Scaramouche",
                 "line_item_total": 50,
