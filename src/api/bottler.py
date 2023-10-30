@@ -38,10 +38,10 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
                                     """)).scalar_one()
         for potions_delivered in potions_delivered:
 
-            potion_id = connection.execute(
+            potion_sku = connection.execute(
                             sqlalchemy.text("""
                                             SELECT 
-                                            potion_id
+                                            sku
                                             FROM potions
                                             WHERE potion_type = :type
                                             """),[{"type": potions_delivered.potion_type}]).scalar_one()
@@ -49,11 +49,11 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
                 sqlalchemy.text(
                     """
                     INSERT into potion_ledger
-                    (transaction_id, potion_id, change)
+                    (transaction_id, potion_sku, change)
                     VALUES
-                    (:trans_id, :potion_id, :quantity)
+                    (:trans_id, :potion_sku, :quantity)
                     """),
-                [{"quantity": potions_delivered.quantity, "potion_id": potion_id, "trans_id": trans_id}])
+                [{"quantity": potions_delivered.quantity, "potion_sku": potion_sku, "trans_id": trans_id}])
 
         connection.execute(
             sqlalchemy.text(
