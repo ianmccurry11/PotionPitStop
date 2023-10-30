@@ -75,8 +75,8 @@ def search_orders(
             .join(potion_ledger, potion_ledger.c.transaction_id == transactions.c.id)
             .join(potions, potions.c.sku == potion_ledger.c.potion_sku)
             .join(carts, carts.c.cart_id == potion_ledger.c.cart_id)
-            .offset(offset)
             .order_by(order_by, transactions.c.id)
+            .offset(offset)
             .limit(5)
         )
 
