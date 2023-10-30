@@ -40,38 +40,37 @@ def search_orders(
     potion_ledger = sqlalchemy.Table("potion_ledger", metadata_obj, autoload_with=db.engine)
     transactions = sqlalchemy.Table("transactions", metadata_obj, autoload_with=db.engine)
 
+    where_message = ""
+    if customer_name != "" and potion_sku != "":
+        where_message = f"WHERE carts.customer ILIKE '%{customer_name}%' AND cart_items.potion_sku ILIKE '%{potion_sku}%'"
+    elif customer_name != "":
+        where_message = f"WHERE carts.customer ILIKE '%{customer_name}%'"
+    elif potion_sku != "":
+        where_message = f"WHERE cart_items.sku ILIKE '%{potion_sku}%'"
+
+    if sort_col is search_sort_options.customer_name:
+        order_by = carts.c.name
+    elif sort_col is search_sort_options.item_sku:
+        order_by = potions.c.name
+    elif sort_col is search_sort_options.line_item_total:
+        order_by = 'total'
+    elif sort_col is search_sort_options.timestamp:
+        order_by = transactions.c.created_at
+
+    if sort_order is search_sort_order.asc:
+        order_by = sqlalchemy.asc(order_by)
+    elif sort_order is search_sort_order.desc:
+        order_by = sqlalchemy.desc(order_by)
+
+    if search_page != "":
+        offset = int(search_page) 
+    else:
+        offset = 0
+    if offset - 5 < 0:
+        previous = "" 
+    else: 
+        previous = str(offset - 5)
     with db.engine.begin() as connection:
-        where_message = ""
-        if customer_name != "" and potion_sku != "":
-            where_message = f"WHERE carts.customer ILIKE '%{customer_name}%' AND cart_items.potion_sku ILIKE '%{potion_sku}%'"
-        elif customer_name != "":
-            where_message = f"WHERE carts.customer ILIKE '%{customer_name}%'"
-        elif potion_sku != "":
-            where_message = f"WHERE cart_items.sku ILIKE '%{potion_sku}%'"
-
-        if sort_col is search_sort_options.customer_name:
-            order_by = carts.c.name
-        elif sort_col is search_sort_options.item_sku:
-            order_by = potions.c.name
-        elif sort_col is search_sort_options.line_item_total:
-            order_by = 'total'
-        elif sort_col is search_sort_options.timestamp:
-            order_by = transactions.c.created_at
-    
-        if sort_order is search_sort_order.asc:
-            order_by = sqlalchemy.asc(order_by)
-        elif sort_order is search_sort_order.desc:
-            order_by = sqlalchemy.desc(order_by)
-
-        if search_page != "":
-            offset = int(search_page) 
-        else:
-            offset = 0
-        if offset - 5 < 0:
-            previous = "" 
-        else: 
-            previous = str(offset - 5)
-        
         stmt = (
             sqlalchemy.select(
                 transactions.c.id,
@@ -115,31 +114,6 @@ def search_orders(
         else:
             next = ""
     
-    """
-    Search for cart line items by customer name and/or potion sku.
-
-    Customer name and potion sku filter to orders that contain the 
-    string (case insensitive). If the filters aren't provided, no
-    filtering occurs on the respective search term.
-
-    Search page is a cursor for pagination. The response to this
-    search endpoint will return previous or next if there is a
-    previous or next page of results available. The token passed
-    in that search response can be passed in the next search request
-    as search page to get that page of results.
-
-    Sort col is which column to sort by and sort order is the direction
-    of the search. They default to searching by timestamp of the order
-    in descending order.
-
-    The response itself contains a previous and next page token (if
-    such pages exist) and the results as an array of line items. Each
-    line item contains the line item id (must be unique), item sku, 
-    customer name, line item total (in gold), and timestamp of the order.
-    Your results must be paginated, the max results you can return at any
-    time is 5 total line items.
-    """
-
     return {    
         "previous": previous,
         "next": next,
