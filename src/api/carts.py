@@ -84,9 +84,9 @@ def search_orders(
             .join(potion_ledger, potion_ledger.c.transaction_id == transactions.c.id)
             .join(potions, potions.c.sku == potion_ledger.c.potion_sku)
             .join(carts, carts.c.cart_id == potion_ledger.c.cart_id)
-            .join(transactions, transactions.c.id == potion_ledger.c.transaction_id)
+            #.join(transactions, transactions.c.id == potion_ledger.c.transaction_id)
             .offset(offset)
-            .order_by(order_by, transactions.c.transaction_id)
+            .order_by(order_by, transactions.c.id)
             .limit(5)
         )
 
@@ -198,9 +198,9 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
         transaction_id = connection.execute(
                                 sqlalchemy.text("""
                                                 INSERT into transactions
-                                                (description) 
+                                                (description, cart_id) 
                                                 VALUES 
-                                                (CONCAT('SOLD :quantity POTIONS FOR :price GOLD, TO ', :name , ' - :cart_id'))
+                                                (CONCAT('SOLD :quantity POTIONS FOR :price GOLD, TO ', :name , ' - :cart_id'),cart_id)
                                                 RETURNING
                                                 id;
                                                 """),
