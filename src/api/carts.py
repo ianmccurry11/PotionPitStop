@@ -31,22 +31,12 @@ def search_orders(
     sort_col: search_sort_options = search_sort_options.timestamp,
     sort_order: search_sort_order = search_sort_order.desc,
 ):
-    next = 0
-
     # Use reflection to derive table schema. You can also code this in manually.
     metadata_obj = sqlalchemy.MetaData()
     carts = sqlalchemy.Table("carts", metadata_obj, autoload_with=db.engine)
     potions = sqlalchemy.Table("potions", metadata_obj, autoload_with=db.engine)
     potion_ledger = sqlalchemy.Table("potion_ledger", metadata_obj, autoload_with=db.engine)
     transactions = sqlalchemy.Table("transactions", metadata_obj, autoload_with=db.engine)
-
-    where_message = ""
-    if customer_name != "" and potion_sku != "":
-        where_message = f"WHERE carts.customer ILIKE '%{customer_name}%' AND cart_items.potion_sku ILIKE '%{potion_sku}%'"
-    elif customer_name != "":
-        where_message = f"WHERE carts.customer ILIKE '%{customer_name}%'"
-    elif potion_sku != "":
-        where_message = f"WHERE cart_items.sku ILIKE '%{potion_sku}%'"
 
     if sort_col is search_sort_options.customer_name:
         order_by = carts.c.name
@@ -70,13 +60,14 @@ def search_orders(
         previous = "" 
     else: 
         previous = str(offset - 5)
+        
     with db.engine.begin() as connection:
         stmt = (
             sqlalchemy.select(
+                carts.c.name,
+                potions.c.sku,
                 transactions.c.id,
                 transactions.c.created_at,
-                potions.c.sku,
-                carts.c.name,
                 potion_ledger.c.change,
                 potions.c.price,
                 func.abs((potion_ledger.c.change * potions.c.price)).label('total'),
@@ -84,7 +75,6 @@ def search_orders(
             .join(potion_ledger, potion_ledger.c.transaction_id == transactions.c.id)
             .join(potions, potions.c.sku == potion_ledger.c.potion_sku)
             .join(carts, carts.c.cart_id == potion_ledger.c.cart_id)
-            #.join(transactions, transactions.c.id == potion_ledger.c.transaction_id)
             .offset(offset)
             .order_by(order_by, transactions.c.id)
             .limit(5)
@@ -96,12 +86,12 @@ def search_orders(
         if potion_sku != "":
             stmt = stmt.where(potions.c.sku.ilike(f"%{potion_sku}%"))
 
-        res = []
+        list = []
         result = connection.execute(stmt)
         index = offset + 1
         for row in result:
             transaction_id, created_at, sku, name, change, price, total = row
-            res.append({
+            list.append({
                 "line_item_id": index,
                 "item_sku": sku,
                 "customer_name": name,
@@ -109,7 +99,8 @@ def search_orders(
                 "timestamp": created_at,
             })
             index += 1
-        if len(res) == 5:
+        next = 0
+        if len(list) == 5:
             next = str(offset + 5)
         else:
             next = ""
@@ -117,7 +108,7 @@ def search_orders(
     return {    
         "previous": previous,
         "next": next,
-        "results": res,
+        "results": list,
     }
 
 
