@@ -64,10 +64,10 @@ def search_orders(
     with db.engine.begin() as connection:
         stmt = (
             sqlalchemy.select(
-                carts.c.name,
-                potions.c.sku,
                 transactions.c.id,
                 transactions.c.created_at,
+                potions.c.sku,
+                carts.c.name,
                 potion_ledger.c.change,
                 potions.c.price,
                 func.abs((potion_ledger.c.change * potions.c.price)).label('total'),
