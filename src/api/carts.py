@@ -189,9 +189,9 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
         transaction_id = connection.execute(
                                 sqlalchemy.text("""
                                                 INSERT into transactions
-                                                (description, cart_id) 
+                                                (description) 
                                                 VALUES 
-                                                (CONCAT('SOLD :quantity POTIONS FOR :price GOLD, TO ', :name , ' - :cart_id'),cart_id)
+                                                (CONCAT('SOLD :quantity POTIONS FOR :price GOLD, TO ', :name , ' - :cart_id'))
                                                 RETURNING
                                                 id;
                                                 """),
