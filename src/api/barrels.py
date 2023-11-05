@@ -92,6 +92,10 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     green_ml = result.green
     blue_ml = result.blue
     dark_ml = result.dark
+    r_q = 1
+    b_q = 1
+    g_q = 1
+    d_q = 1
 
     r_best, r_gold, r_sku, red   = 0, 0, None, [1,0,0,0]
     g_best, g_gold, g_sku, green = 0, 0, None, [0,1,0,0]
@@ -106,33 +110,41 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                     d_best = barrel.ml_per_barrel/barrel.price
                     d_sku = barrel.sku
                     d_gold = barrel.price
+                    if(gold >= 2*barrel.price):
+                         d_q = 2
         elif (barrel.potion_type == blue and gold >= barrel.price and blue_ml < 2000):
             if(barrel.ml_per_barrel/barrel.price > b_best):
                     b_best = barrel.ml_per_barrel/barrel.price
                     b_sku = barrel.sku
                     b_gold = barrel.price
+                    if(gold >= 2*barrel.price):
+                         b_q = 2
         elif (barrel.potion_type == green and gold >= barrel.price and green_ml < 2000):
             if(barrel.ml_per_barrel/barrel.price > g_best):
                     g_best = barrel.ml_per_barrel/barrel.price
                     g_sku = barrel.sku
                     g_gold = barrel.price
+                    if(gold >= 2*barrel.price):
+                         g_q = 2
         elif (barrel.potion_type == red and gold >= barrel.price and red_ml < 2000):
             if(barrel.ml_per_barrel/barrel.price > r_best):
                     r_best = barrel.ml_per_barrel/barrel.price
                     r_sku = barrel.sku
                     r_gold = barrel.price
+                    if(gold >= 2*barrel.price):
+                         r_q = 2
 
     if(d_sku is not None and d_gold <= gold):
-        barrels.append(Barrel_plan(sku= d_sku,quantity= 1))
+        barrels.append(Barrel_plan(sku= d_sku,quantity= d_q))
         gold -= r_gold
     if(r_sku is not None and r_gold <= gold):
-        barrels.append(Barrel_plan(sku= r_sku,quantity= 1))
+        barrels.append(Barrel_plan(sku= r_sku,quantity= r_q))
         gold -= r_gold
     if(b_sku is not None and g_gold <= gold):
-        barrels.append(Barrel_plan(sku= b_sku,quantity= 1))
+        barrels.append(Barrel_plan(sku= b_sku,quantity= b_q))
         gold -= b_gold
     if(g_sku is not None and b_gold <= gold):
-        barrels.append(Barrel_plan(sku= g_sku,quantity= 1))
+        barrels.append(Barrel_plan(sku= g_sku,quantity= g_q))
         gold -= g_gold
 
 
