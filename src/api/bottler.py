@@ -89,7 +89,7 @@ def get_bottle_plan():
     dark_ml  = result.dark
 
     for potion in possible_potions:
-        while total_pots < 300 and staged < 25 and potion.potion_type[0] <= red_ml and potion.potion_type[1] <= green_ml and potion.potion_type[2] <= blue_ml and potion.potion_type[3] <= dark_ml:
+        while total_pots < 300 and staged < 25 and potion.potion_type[0] <= red_ml and potion.potion_type[1] <= green_ml and potion.potion_type[2] <= blue_ml and potion.potion_type[3] <= dark_ml and potion.name != 'teal':
             staged   += 1
             red_ml   -= potion.potion_type[0]
             green_ml -= potion.potion_type[1]
