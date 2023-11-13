@@ -82,6 +82,7 @@ class Barrel_plan(BaseModel):
 # Gets called once a day
 @router.post("/plan")
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
+    return()
     """ """
     print(wholesale_catalog)
     with db.engine.begin() as connection:
